@@ -165,6 +165,17 @@
     .btn-delete-entry:hover { background: #dc2626; }
     .btn-reset { background: #475569; margin-top: 15px; width: 100%; padding: 8px; font-size: 0.8rem; }
 
+    /* DATA BACKUP CONTROLS */
+    .backup-panel { background: #0f172a; border: 1px solid #334155; padding: 16px; border-radius: 10px; margin-top: 20px; }
+    .backup-panel h4 { margin: 0 0 8px 0; color: #fbbf24; font-size: 0.95rem; }
+    .backup-panel p { font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px; line-height: 1.4; }
+    .backup-btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn-backup { background: #2563eb; color: #fff; font-size: 0.85rem; padding: 8px 14px; }
+    .btn-backup:hover { background: #1d4ed8; }
+    .btn-restore { background: #10b981; color: #fff; font-size: 0.85rem; padding: 8px 14px; display: inline-block; }
+    .btn-restore:hover { background: #059669; }
+    #importFileInput { display: none; }
+
     /* History Log */
     .history-item { background: #0f172a; border-left: 4px solid #3b82f6; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #334155; position: relative; }
     .history-date { color: #4ade80; font-weight: bold; font-size: 0.95rem; margin-bottom: 5px; }
@@ -366,6 +377,18 @@
       <h3 style="margin-top:0;" id="day-title">Day 1: Upper A</h3>
       <div id="workout-list"></div>
       <button class="btn-finish" onclick="logWorkoutSession()">Log Session to History 📝</button>
+      
+      <!-- EXPORT & IMPORT BACKUP SECTION -->
+      <div class="backup-panel">
+        <h4>💾 Save Data & Cross-Device Sync</h4>
+        <p>Export your XP, weights, and workout history into a file to transfer your progress between devices or back up your account before clearing history.</p>
+        <div class="backup-btn-group">
+          <button type="button" class="btn btn-backup" onclick="exportData()">Export Backup (.json)</button>
+          <label for="importFileInput" class="btn btn-restore">Import Backup File</label>
+          <input type="file" id="importFileInput" accept=".json" onchange="importData(event)">
+        </div>
+      </div>
+
       <button class="btn-reset" onclick="resetProgress()">Clear Entire Database</button>
     </div>
   </div>
@@ -410,6 +433,9 @@
   </div>
 
   <script>
+    // VERSION CONTROL & STORAGE CONFIGURATION
+    const CURRENT_APP_VERSION = 1;
+
     let skillsXP = JSON.parse(localStorage.getItem('user_skills_xp')) || { push: 0, pull: 0, legs: 0, core: 0, engine: 0 };
     let workoutHistory = JSON.parse(localStorage.getItem('user_workout_history')) || [];
     let savedWeights = JSON.parse(localStorage.getItem('user_saved_weights')) || {};
@@ -417,6 +443,15 @@
     let activeDay = 1;
     let timerInterval = null;
     let levelUpQueue = [];
+
+    // AUTOMATED VERSION CHECK ON LAUNCH
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedVersion = localStorage.getItem('gym_app_version');
+      if (!savedVersion || parseInt(savedVersion, 10) < CURRENT_APP_VERSION) {
+        console.log(`Migrating local storage to app version ${CURRENT_APP_VERSION}`);
+        localStorage.setItem('gym_app_version', CURRENT_APP_VERSION);
+      }
+    });
 
     const skillIcons = {
       push: "🏋️",
@@ -582,7 +617,6 @@
       }
     }
 
-    /* UPDATED WEIGHT TRACKER WITH RESET FOR 5-SESSION COUNTER */
     function updateWeight(exerciseName, val) {
       const oldWeight = parseFloat(savedWeights[exerciseName]) || 0;
       const newWeight = parseFloat(val) || 0;
@@ -1000,6 +1034,76 @@
         renderWorkouts();
         renderHistory();
       }
+    }
+
+    // ----------------------------------------------------
+    // EXPORT & IMPORT BACKUP SYSTEM
+    // ----------------------------------------------------
+    function exportData() {
+      const backupData = {
+        version: CURRENT_APP_VERSION,
+        timestamp: new Date().toISOString(),
+        skillsXP: skillsXP,
+        workoutHistory: workoutHistory,
+        savedWeights: savedWeights,
+        overloadHistory: overloadHistory
+      };
+
+      const jsonString = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.href = url;
+      downloadAnchor.download = `gym_rpg_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+
+      document.body.removeChild(downloadAnchor);
+      URL.revokeObjectURL(url);
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const importedPayload = JSON.parse(e.target.result);
+
+          if (importedPayload && (importedPayload.skillsXP || importedPayload.workoutHistory)) {
+            if (importedPayload.skillsXP) {
+              skillsXP = importedPayload.skillsXP;
+              localStorage.setItem('user_skills_xp', JSON.stringify(skillsXP));
+            }
+            if (importedPayload.workoutHistory) {
+              workoutHistory = importedPayload.workoutHistory;
+              localStorage.setItem('user_workout_history', JSON.stringify(workoutHistory));
+            }
+            if (importedPayload.savedWeights) {
+              savedWeights = importedPayload.savedWeights;
+              localStorage.setItem('user_saved_weights', JSON.stringify(savedWeights));
+            }
+            if (importedPayload.overloadHistory) {
+              overloadHistory = importedPayload.overloadHistory;
+              localStorage.setItem('user_overload_tracker', JSON.stringify(overloadHistory));
+            }
+
+            localStorage.setItem('gym_app_version', importedPayload.version || CURRENT_APP_VERSION);
+
+            alert("Backup imported successfully! Page will now reload.");
+            location.reload();
+          } else {
+            alert("Invalid file: Back up file does not contain recognized gym tracker data.");
+          }
+        } catch (err) {
+          alert("Error reading backup file: " + err.message);
+        }
+      };
+
+      reader.readAsText(file);
     }
 
     renderDayTabs();

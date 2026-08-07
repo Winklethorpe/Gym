@@ -3,11 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gym RPG Tracker & Rest Timer</title>
+  <title>EnGym - Gym Workout Tracker</title>
+  
+  <!-- BROWSER TAB FAVICON -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚙️</text></svg>">
+
   <style>
+    :root {
+      /* Heatmap Dynamic Color Palette */
+      --stage-5: #00E5FF; /* Just Worked (0-24h) - Bright Cyan/Blue */
+      --stage-4: #00FF66; /* Recent (24-48h) - Vibrant Green */
+      --stage-3: #00C853; /* Fading (48-72h) - Muted Green */
+      --stage-2: #80D8FF; /* Nearly Rested (72-96h) - Soft Ice Blue */
+      --stage-1: transparent; /* Cold / Unused (96h+) - Clear */
+    }
+
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; max-width: 960px; margin: auto; }
     .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3); box-sizing: border-box; }
-    .header-stats { display: flex; justify-content: space-between; align-items: center; font-size: 1.2rem; }
+    
+    /* CLEAN BANNER & HEADER STYLING */
+    .app-header-banner { text-align: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #334155; }
+    .app-title { font-size: 2.2rem; font-weight: 900; letter-spacing: 2px; color: #38bdf8; text-transform: uppercase; margin: 8px 0 2px 0; text-shadow: 0 2px 10px rgba(56, 189, 248, 0.2); }
+    .app-subtitle { font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; font-weight: bold; margin: 0; }
+    .header-logo-svg { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4)); }
+
+    .header-stats { display: flex; justify-content: space-between; align-items: center; font-size: 1.1rem; }
     .xp-bar { background: #334155; border-radius: 10px; height: 14px; width: 100%; margin-top: 10px; overflow: hidden; }
     .xp-progress { background: linear-gradient(90deg, #10b981, #34d399); height: 100%; width: 0%; transition: width 0.4s ease; }
     
@@ -24,27 +44,44 @@
     .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     @media (max-width: 820px) { .dashboard { grid-template-columns: 1fr; } }
 
-    /* Day Selector Tabs */
+    /* Target Muscle Group Tabs */
     .day-selector { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 15px; }
-    .day-btn { background: #334155; color: #94a3b8; border: 1px solid #475569; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+    .day-btn { background: #334155; color: #94a3b8; border: 1px solid #475569; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
     .day-btn:hover { background: #475569; color: #fff; }
     .day-btn.active { background: #3b82f6; color: #fff; border-color: #60a5fa; font-weight: bold; }
 
-    /* HEATMAP STYLING */
+    /* DYNAMIC HEATMAP STYLING */
     .heatmap-container { display: flex; justify-content: space-around; align-items: center; gap: 15px; padding: 10px 0; }
     .body-view { text-align: center; background: #0f172a; padding: 12px 16px; border-radius: 10px; border: 1px solid #334155; }
     .body-view h4 { margin: 0 0 10px 0; color: #64748b; font-size: 0.8rem; letter-spacing: 1.5px; }
     
-    .muscle { fill: #1e293b; stroke: #38bdf8; stroke-width: 1.2; transition: all 0.4s ease; cursor: pointer; opacity: 0.85; }
-    .muscle:hover { fill: #0284c7; opacity: 1; filter: drop-shadow(0 0 4px #38bdf8); }
-    .worked { fill: #22c55e !important; stroke: #4ade80 !important; opacity: 1 !important; filter: drop-shadow(0 0 6px #22c55e); }
+    .muscle { 
+      cursor: pointer; 
+      stroke: #334155; 
+      stroke-width: 1.2; 
+      transition: fill 0.4s ease, opacity 0.4s ease, stroke 0.2s ease, filter 0.4s ease; 
+    }
+    .muscle:hover { stroke: #ffffff; stroke-width: 2; }
 
-    .legend { display: flex; justify-content: center; gap: 15px; font-size: 0.75rem; color: #94a3b8; margin-top: 12px; margin-bottom: 20px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+    /* Heatmap Stage Classes */
+    .muscle[data-stage="5"] { fill: var(--stage-5); opacity: 0.95; filter: drop-shadow(0 0 4px var(--stage-5)); stroke: #ffffff; }
+    .muscle[data-stage="4"] { fill: var(--stage-4); opacity: 0.85; filter: drop-shadow(0 0 3px var(--stage-4)); stroke: #4ade80; }
+    .muscle[data-stage="3"] { fill: var(--stage-3); opacity: 0.65; stroke: #22c55e; }
+    .muscle[data-stage="2"] { fill: var(--stage-2); opacity: 0.25; stroke: #38bdf8; }
+    .muscle[data-stage="1"] { fill: var(--stage-1); stroke: #334155; stroke-dasharray: 2 2; }
 
-    /* OSRS SKILLS GRID TABLE */
-    .osrs-stats-header { text-align: center; margin: 15px 0 10px 0; font-size: 1rem; color: #fbbf24; border-top: 1px solid #334155; padding-top: 15px; }
+    .legend-container { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; margin-bottom: 20px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #94a3b8; background: #0f172a; padding: 4px 8px; border-radius: 12px; border: 1px solid #334155; }
+    .legend-badge { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+    .badge-s5 { background-color: var(--stage-5); box-shadow: 0 0 5px var(--stage-5); }
+    .badge-s4 { background-color: var(--stage-4); box-shadow: 0 0 5px var(--stage-4); }
+    .badge-s3 { background-color: var(--stage-3); }
+    .badge-s2 { background-color: var(--stage-2); opacity: 0.6; }
+    .badge-s1 { background-color: transparent; border: 1px dashed #94a3b8; }
+
+    /* SKILLS GRID TABLE */
+    .osrs-stats-header { text-align: center; margin: 15px 0 10px 0; font-size: 0.9rem; color: #fbbf24; border-top: 1px solid #334155; padding-top: 15px; letter-spacing: 1px; font-weight: bold; }
     .osrs-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: #0f172a; padding: 10px; border-radius: 10px; border: 1px solid #334155; }
     
     .osrs-skill-cell { 
@@ -61,9 +98,7 @@
     }
     .osrs-skill-cell:hover { border-color: #60a5fa; background: #26334d; }
     
-    .lvl-up-pulse {
-      animation: skillLevelUpGlow 1.5s infinite ease-in-out;
-    }
+    .lvl-up-pulse { animation: skillLevelUpGlow 1.5s infinite ease-in-out; }
     @keyframes skillLevelUpGlow {
       0% { border-color: #334155; box-shadow: 0 0 0 rgba(245, 158, 11, 0); }
       50% { border-color: #f59e0b; box-shadow: 0 0 12px rgba(245, 158, 11, 0.8); transform: scale(1.03); }
@@ -135,7 +170,7 @@
     .weight-input-box input { background: transparent; border: none; color: #f8fafc; width: 42px; text-align: center; font-weight: bold; font-size: 0.85rem; outline: none; }
     .weight-input-box span { color: #94a3b8; font-size: 0.75rem; }
 
-    /* GLOWING WEIGHT INPUT FOR 5-SESSION OVERLOAD READINESS */
+    /* GLOWING WEIGHT INPUT FOR OVERLOAD READINESS */
     .weight-input-box.ready-glow {
       border-color: #f59e0b !important;
       animation: weightGlowPulse 2s infinite ease-in-out;
@@ -165,15 +200,12 @@
     .btn-delete-entry:hover { background: #dc2626; }
     .btn-reset { background: #475569; margin-top: 15px; width: 100%; padding: 8px; font-size: 0.8rem; }
 
-    /* DATA BACKUP CONTROLS */
-    .backup-panel { background: #0f172a; border: 1px solid #334155; padding: 16px; border-radius: 10px; margin-top: 20px; }
-    .backup-panel h4 { margin: 0 0 8px 0; color: #fbbf24; font-size: 0.95rem; }
-    .backup-panel p { font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px; line-height: 1.4; }
-    .backup-btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn-backup { background: #2563eb; color: #fff; font-size: 0.85rem; padding: 8px 14px; }
-    .btn-backup:hover { background: #1d4ed8; }
-    .btn-restore { background: #10b981; color: #fff; font-size: 0.85rem; padding: 8px 14px; display: inline-block; }
-    .btn-restore:hover { background: #059669; }
+    /* Backup Controls Panel */
+    .backup-panel { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+    .btn-export { background: #0284c7; flex: 1; min-width: 140px; }
+    .btn-export:hover { background: #0369a1; }
+    .btn-import { background: #10b981; flex: 1; min-width: 140px; text-align: center; cursor: pointer; }
+    .btn-import:hover { background: #059669; }
     #importFileInput { display: none; }
 
     /* History Log */
@@ -188,12 +220,31 @@
     .modal-body { color: #e2e8f0; font-size: 0.95rem; line-height: 1.5; margin: 15px 0; text-align: left; }
     .modal-close { background: #ef4444; width: 100%; padding: 10px; font-size: 0.95rem; margin-top: 10px; }
     .modal-close:hover { background: #dc2626; }
+    
+    /* YOUTUBE LINK BUTTON */
+    .btn-youtube {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #ff0000;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      padding: 10px 16px;
+      border-radius: 6px;
+      width: 100%;
+      box-sizing: border-box;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+    .btn-youtube:hover { background: #cc0000; }
 
-    /* OSRS LEVEL UP POP-UP STYLING */
+    /* LEVEL UP POP-UP STYLING */
     .level-up-card {
-      background: linear-gradient(180deg, #2a1f0a 0%, #170f03 100%);
-      border: 2px solid #f59e0b;
-      box-shadow: 0 0 30px rgba(245, 158, 11, 0.5), inset 0 0 15px rgba(245, 158, 11, 0.2);
+      background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 30px rgba(56, 189, 248, 0.4), inset 0 0 15px rgba(56, 189, 248, 0.2);
       animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     @keyframes popIn {
@@ -201,10 +252,10 @@
       100% { transform: scale(1); opacity: 1; }
     }
     .level-up-icon { font-size: 3.5rem; margin-bottom: 10px; }
-    .level-up-title { color: #fbbf24; font-size: 1.6rem; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
-    .level-up-sub { color: #fef08a; font-size: 1.1rem; margin: 10px 0 20px 0; font-weight: bold; }
-    .btn-level-up { background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%); color: #000; font-weight: bold; border: 1px solid #fef08a; font-size: 1.1rem; }
-    .btn-level-up:hover { background: #fbbf24; }
+    .level-up-title { color: #38bdf8; font-size: 1.6rem; text-transform: uppercase; letter-spacing: 1px; margin: 0; }
+    .level-up-sub { color: #f8fafc; font-size: 1.1rem; margin: 10px 0 20px 0; font-weight: bold; }
+    .btn-level-up { background: #38bdf8; color: #0f172a; font-weight: bold; font-size: 1.1rem; }
+    .btn-level-up:hover { background: #0284c7; color: white; }
 
     /* TIMER DISPLAY */
     .timer-display { font-size: 3.5rem; font-weight: bold; color: #34d399; font-family: monospace; margin: 15px 0; }
@@ -213,8 +264,37 @@
 </head>
 <body>
 
-  <!-- HEADER STATS & ANALYTICS -->
+  <!-- HEADER STATS, BRANDING BANNER & ANALYTICS -->
   <div class="card">
+    <div class="app-header-banner">
+      <!-- ENGINE & PISTON BRAND LOGO SVG -->
+      <svg class="header-logo-svg" width="60" height="60" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- OUTER GEAR / CROWNWHEEL -->
+        <g stroke="#38bdf8" stroke-width="3.5" stroke-linejoin="round">
+          <circle cx="50" cy="50" r="38" stroke="#334155" stroke-width="4"/>
+          <!-- Gear Teeth -->
+          <path d="M50 8 V2 M50 98 V92 M8 50 H2 M98 50 H92" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+          <path d="M20.3 20.3 L16 16 M84 84 L79.7 79.7 M20.3 79.7 L16 84 M84 16 L79.7 20.3" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+        </g>
+        
+        <!-- PISTON ASSEMBLY -->
+        <!-- Piston Crown/Head -->
+        <rect x="36" y="24" width="28" height="20" rx="3" fill="#1e293b" stroke="#38bdf8" stroke-width="2.5"/>
+        <!-- Compression Rings -->
+        <line x1="38" y1="29" x2="62" y2="29" stroke="#fbbf24" stroke-width="1.5"/>
+        <line x1="38" y1="34" x2="62" y2="34" stroke="#fbbf24" stroke-width="1.5"/>
+        
+        <!-- Gudgeon Pin & Connecting Rod -->
+        <circle cx="50" cy="39" r="2.5" fill="#fbbf24"/>
+        <path d="M50 41 L50 66" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+        
+        <!-- Crankshaft / Big End Journal -->
+        <circle cx="50" cy="68" r="5" fill="#0f172a" stroke="#fbbf24" stroke-width="2.5"/>
+      </svg>
+      <div class="app-title">EnGym</div>
+      <div class="app-subtitle">Gym Workout Tracker</div>
+    </div>
+
     <div class="header-stats">
       <span><strong>Overall Level:</strong> <span id="level-display" style="color:#60a5fa;">0</span></span>
       <span><strong>Total XP:</strong> <span id="xp-display">0</span> XP</span>
@@ -223,7 +303,6 @@
       <div id="xp-progress" class="xp-progress"></div>
     </div>
 
-    <!-- HEART & VOLUME ANALYTICS PANEL -->
     <div class="analytics-grid">
       <div class="analytics-box">
         <div class="analytics-title">🫀 Cardio Engine Time</div>
@@ -246,9 +325,8 @@
   </div>
 
   <div class="dashboard">
-    <!-- DUAL MUSCLE HEATMAP & OSRS SKILL TABLE -->
     <div class="card">
-      <h3 style="text-align: center; margin-top:0; font-size: 1.1rem; color: #f8fafc;">Muscle Activation & Attributes</h3>
+      <h3 style="text-align: center; margin-top:0; font-size: 1.1rem; color: #f8fafc;">Muscle Activation & Recovery Heatmap</h3>
       
       <div class="heatmap-container">
         <!-- FRONT BODY VIEW -->
@@ -258,19 +336,19 @@
             <circle cx="60" cy="18" r="11" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
             <path d="M 54,29 L 66,29 L 68,36 L 52,36 Z" fill="#1e293b" stroke="#334155" stroke-width="1"/>
             
-            <path id="front_delts_l" class="muscle" d="M 33,38 Q 23,42 27,58 Q 38,55 38,40 Z"><title>Left Front Delt</title></path>
-            <path id="front_delts_r" class="muscle" d="M 87,38 Q 97,42 93,58 Q 82,55 82,40 Z"><title>Right Front Delt</title></path>
-            <path id="biceps_l" class="muscle" d="M 26,59 Q 20,78 28,95 Q 35,92 33,60 Z"><title>Left Bicep</title></path>
-            <path id="biceps_r" class="muscle" d="M 94,59 Q 100,78 92,95 Q 85,92 87,60 Z"><title>Right Bicep</title></path>
+            <path id="front_delts_l" class="muscle" data-stage="1" d="M 33,38 Q 23,42 27,58 Q 38,55 38,40 Z"><title>Left Front Delt</title></path>
+            <path id="front_delts_r" class="muscle" data-stage="1" d="M 87,38 Q 97,42 93,58 Q 82,55 82,40 Z"><title>Right Front Delt</title></path>
+            <path id="biceps_l" class="muscle" data-stage="1" d="M 26,59 Q 20,78 28,95 Q 35,92 33,60 Z"><title>Left Bicep</title></path>
+            <path id="biceps_r" class="muscle" data-stage="1" d="M 94,59 Q 100,78 92,95 Q 85,92 87,60 Z"><title>Right Bicep</title></path>
 
-            <path id="chest_l" class="muscle" d="M 39,39 Q 59,40 59,62 Q 40,65 37,50 Z"><title>Left Chest</title></path>
-            <path id="chest_r" class="muscle" d="M 81,39 Q 61,40 61,62 Q 80,65 83,50 Z"><title>Right Chest</title></path>
-            <path id="abs" class="muscle" d="M 42,65 L 78,65 L 74,115 L 46,115 Z"><title>Abs & Core</title></path>
+            <path id="chest_l" class="muscle" data-stage="1" d="M 39,39 Q 59,40 59,62 Q 40,65 37,50 Z"><title>Left Chest</title></path>
+            <path id="chest_r" class="muscle" data-stage="1" d="M 81,39 Q 61,40 61,62 Q 80,65 83,50 Z"><title>Right Chest</title></path>
+            <path id="abs" class="muscle" data-stage="1" d="M 42,65 L 78,65 L 74,115 L 46,115 Z"><title>Abs & Core</title></path>
 
-            <path id="quads_l" class="muscle" d="M 38,118 Q 32,155 42,185 Q 56,185 57,118 Z"><title>Left Quad</title></path>
-            <path id="quads_r" class="muscle" d="M 82,118 Q 88,155 78,185 Q 64,185 63,118 Z"><title>Right Quad</title></path>
-            <path id="calves_front_l" class="muscle" d="M 40,190 Q 36,215 44,232 Q 51,225 50,190 Z"><title>Left Calf (Front)</title></path>
-            <path id="calves_front_r" class="muscle" d="M 80,190 Q 84,215 76,232 Q 69,225 70,190 Z"><title>Right Calf (Front)</title></path>
+            <path id="quads_l" class="muscle" data-stage="1" d="M 38,118 Q 32,155 42,185 Q 56,185 57,118 Z"><title>Left Quad</title></path>
+            <path id="quads_r" class="muscle" data-stage="1" d="M 82,118 Q 88,155 78,185 Q 64,185 63,118 Z"><title>Right Quad</title></path>
+            <path id="calves_front_l" class="muscle" data-stage="1" d="M 40,190 Q 36,215 44,232 Q 51,225 50,190 Z"><title>Left Calf (Front)</title></path>
+            <path id="calves_front_r" class="muscle" data-stage="1" d="M 80,190 Q 84,215 76,232 Q 69,225 70,190 Z"><title>Right Calf (Front)</title></path>
           </svg>
         </div>
 
@@ -280,93 +358,43 @@
           <svg width="125" height="250" viewBox="0 0 120 240">
             <circle cx="60" cy="18" r="11" fill="#1e293b" stroke="#334155" stroke-width="1.5"/>
             
-            <path id="rear_delts_l" class="muscle" d="M 33,38 Q 23,42 27,58 Q 38,55 38,40 Z"><title>Left Rear Delt</title></path>
-            <path id="rear_delts_r" class="muscle" d="M 87,38 Q 97,42 93,58 Q 82,55 82,40 Z"><title>Right Rear Delt</title></path>
-            <path id="triceps_l" class="muscle" d="M 26,59 Q 20,78 28,95 Q 35,92 33,60 Z"><title>Left Tricep</title></path>
-            <path id="triceps_r" class="muscle" d="M 94,59 Q 100,78 92,95 Q 85,92 87,60 Z"><title>Right Tricep</title></path>
+            <path id="rear_delts_l" class="muscle" data-stage="1" d="M 33,38 Q 23,42 27,58 Q 38,55 38,40 Z"><title>Left Rear Delt</title></path>
+            <path id="rear_delts_r" class="muscle" data-stage="1" d="M 87,38 Q 97,42 93,58 Q 82,55 82,40 Z"><title>Right Rear Delt</title></path>
+            <path id="triceps_l" class="muscle" data-stage="1" d="M 26,59 Q 20,78 28,95 Q 35,92 33,60 Z"><title>Left Tricep</title></path>
+            <path id="triceps_r" class="muscle" data-stage="1" d="M 94,59 Q 100,78 92,95 Q 85,92 87,60 Z"><title>Right Tricep</title></path>
 
-            <path id="lats" class="muscle" d="M 39,39 L 81,39 L 72,82 L 48,82 Z"><title>Lats / Upper Back</title></path>
-            <path id="lower_back" class="muscle" d="M 47,84 L 73,84 L 70,105 L 50,105 Z"><title>Lower Back</title></path>
+            <path id="lats" class="muscle" data-stage="1" d="M 39,39 L 81,39 L 72,82 L 48,82 Z"><title>Lats / Upper Back</title></path>
+            <path id="lower_back" class="muscle" data-stage="1" d="M 47,84 L 73,84 L 70,105 L 50,105 Z"><title>Lower Back</title></path>
 
-            <path id="glutes_l" class="muscle" d="M 36,107 Q 34,130 58,130 Q 58,107 36,107 Z"><title>Left Glute</title></path>
-            <path id="glutes_r" class="muscle" d="M 84,107 Q 86,130 62,130 Q 62,107 84,107 Z"><title>Right Glute</title></path>
-            <path id="hamstrings_l" class="muscle" d="M 37,133 Q 35,165 44,185 Q 56,185 57,133 Z"><title>Left Hamstring</title></path>
-            <path id="hamstrings_r" class="muscle" d="M 83,133 Q 85,165 76,185 Q 64,185 63,133 Z"><title>Right Hamstring</title></path>
-            <path id="calves_back_l" class="muscle" d="M 40,190 Q 35,215 44,232 Q 51,225 50,190 Z"><title>Left Calf</title></path>
-            <path id="calves_back_r" class="muscle" d="M 80,190 Q 85,215 76,232 Q 69,225 70,190 Z"><title>Right Calf</title></path>
+            <path id="glutes_l" class="muscle" data-stage="1" d="M 36,107 Q 34,130 58,130 Q 58,107 36,107 Z"><title>Left Glute</title></path>
+            <path id="glutes_r" class="muscle" data-stage="1" d="M 84,107 Q 86,130 62,130 Q 62,107 84,107 Z"><title>Right Glute</title></path>
+            <path id="hamstrings_l" class="muscle" data-stage="1" d="M 37,133 Q 35,165 44,185 Q 56,185 57,133 Z"><title>Left Hamstring</title></path>
+            <path id="hamstrings_r" class="muscle" data-stage="1" d="M 83,133 Q 85,165 76,185 Q 64,185 63,133 Z"><title>Right Hamstring</title></path>
+            <path id="calves_back_l" class="muscle" data-stage="1" d="M 40,190 Q 35,215 44,232 Q 51,225 50,190 Z"><title>Left Calf</title></path>
+            <path id="calves_back_r" class="muscle" data-stage="1" d="M 80,190 Q 85,215 76,232 Q 69,225 70,190 Z"><title>Right Calf</title></path>
           </svg>
         </div>
       </div>
 
-      <div class="legend">
-        <div class="legend-item"><span class="legend-dot" style="background:#1e293b; border: 1px solid #38bdf8;"></span> Unworked</div>
-        <div class="legend-item"><span class="legend-dot" style="background:#22c55e; box-shadow: 0 0 5px #22c55e;"></span> Targeted</div>
+      <!-- 5-Stage Legend -->
+      <div class="legend-container">
+        <div class="legend-item"><span class="legend-badge badge-s5"></span> 0–24h</div>
+        <div class="legend-item"><span class="legend-badge badge-s4"></span> 24–48h</div>
+        <div class="legend-item"><span class="legend-badge badge-s3"></span> 48–72h</div>
+        <div class="legend-item"><span class="legend-badge badge-s2"></span> 72–96h</div>
+        <div class="legend-item"><span class="legend-badge badge-s1"></span> 96h+ (Cold)</div>
       </div>
 
-      <!-- OSRS SKILLS & ATTRIBUTES GRID -->
-      <div class="osrs-stats-header">⚔️ SKILL ATTRIBUTES</div>
+      <div class="osrs-stats-header">STAT ATTRIBUTES</div>
       <div class="osrs-stats-grid">
-        <!-- PUSH SKILL -->
-        <div class="osrs-skill-cell" id="skill-cell-push">
-          <div class="osrs-skill-top">
-            <span class="osrs-skill-name">🏋️ PUSH</span>
-            <span class="osrs-skill-lvl" id="lvl-push">0</span>
-          </div>
-          <div class="osrs-skill-bar-bg">
-            <div class="osrs-skill-bar-fill" id="bar-push"></div>
-          </div>
-        </div>
-
-        <!-- PULL SKILL -->
-        <div class="osrs-skill-cell" id="skill-cell-pull">
-          <div class="osrs-skill-top">
-            <span class="osrs-skill-name">🚣 PULL</span>
-            <span class="osrs-skill-lvl" id="lvl-pull">0</span>
-          </div>
-          <div class="osrs-skill-bar-bg">
-            <div class="osrs-skill-bar-fill" id="bar-pull"></div>
-          </div>
-        </div>
-
-        <!-- LEGS SKILL -->
-        <div class="osrs-skill-cell" id="skill-cell-legs">
-          <div class="osrs-skill-top">
-            <span class="osrs-skill-name">🦵 LEGS</span>
-            <span class="osrs-skill-lvl" id="lvl-legs">0</span>
-          </div>
-          <div class="osrs-skill-bar-bg">
-            <div class="osrs-skill-bar-fill" id="bar-legs"></div>
-          </div>
-        </div>
-
-        <!-- CORE SKILL -->
-        <div class="osrs-skill-cell" id="skill-cell-core">
-          <div class="osrs-skill-top">
-            <span class="osrs-skill-name">🧘 CORE</span>
-            <span class="osrs-skill-lvl" id="lvl-core">0</span>
-          </div>
-          <div class="osrs-skill-bar-bg">
-            <div class="osrs-skill-bar-fill" id="bar-core"></div>
-          </div>
-        </div>
-
-        <!-- ENGINE (CARDIO) SKILL -->
-        <div class="osrs-skill-cell" id="skill-cell-engine">
-          <div class="osrs-skill-top">
-            <span class="osrs-skill-name">🫀 ENGINE</span>
-            <span class="osrs-skill-lvl" id="lvl-engine">0</span>
-          </div>
-          <div class="osrs-skill-bar-bg">
-            <div class="osrs-skill-bar-fill" id="bar-engine"></div>
-          </div>
-        </div>
-
-        <!-- TOTAL LEVEL BOX -->
-        <div class="osrs-total-cell">
-          <span class="osrs-total-title">Total Level</span>
-          <span class="osrs-total-num" id="total-level-display">0</span>
-          <span class="osrs-total-rank" id="total-rank-display">Unranked</span>
-        </div>
+        <div class="osrs-skill-cell" id="skill-cell-chest"><div class="osrs-skill-top"><span class="osrs-skill-name">🏋️ CHEST</span><span class="osrs-skill-lvl" id="lvl-chest">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-chest"></div></div></div>
+        <div class="osrs-skill-cell" id="skill-cell-back"><div class="osrs-skill-top"><span class="osrs-skill-name">🚣 BACK</span><span class="osrs-skill-lvl" id="lvl-back">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-back"></div></div></div>
+        <div class="osrs-skill-cell" id="skill-cell-shoulders"><div class="osrs-skill-top"><span class="osrs-skill-name">🎯 SHOULDERS</span><span class="osrs-skill-lvl" id="lvl-shoulders">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-shoulders"></div></div></div>
+        <div class="osrs-skill-cell" id="skill-cell-arms"><div class="osrs-skill-top"><span class="osrs-skill-name">💪 ARMS</span><span class="osrs-skill-lvl" id="lvl-arms">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-arms"></div></div></div>
+        <div class="osrs-skill-cell" id="skill-cell-legs"><div class="osrs-skill-top"><span class="osrs-skill-name">🦵 LEGS</span><span class="osrs-skill-lvl" id="lvl-legs">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-legs"></div></div></div>
+        <div class="osrs-skill-cell" id="skill-cell-core"><div class="osrs-skill-top"><span class="osrs-skill-name">🧘 CORE</span><span class="osrs-skill-lvl" id="lvl-core">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-core"></div></div></div>
+        <div class="osrs-skill-cell" id="skill-cell-engine"><div class="osrs-skill-top"><span class="osrs-skill-name">🫀 ENGINE</span><span class="osrs-skill-lvl" id="lvl-engine">0</span></div><div class="osrs-skill-bar-bg"><div class="osrs-skill-bar-fill" id="bar-engine"></div></div></div>
+        <div class="osrs-total-cell" style="grid-column: span 2;"><span class="osrs-total-title">Total Level</span><span class="osrs-total-num" id="total-level-display">0</span><span class="osrs-total-rank" id="total-rank-display">Unranked</span></div>
       </div>
     </div>
 
@@ -374,36 +402,31 @@
     <div class="card">
       <div class="day-selector" id="day-buttons"></div>
 
-      <h3 style="margin-top:0;" id="day-title">Day 1: Upper A</h3>
+      <h3 style="margin-top:0;" id="day-title">Chest Focused Routine</h3>
       <div id="workout-list"></div>
       <button class="btn-finish" onclick="logWorkoutSession()">Log Session to History 📝</button>
       
-      <!-- EXPORT & IMPORT BACKUP SECTION -->
       <div class="backup-panel">
-        <h4>💾 Save Data & Cross-Device Sync</h4>
-        <p>Export your XP, weights, and workout history into a file to transfer your progress between devices or back up your account before clearing history.</p>
-        <div class="backup-btn-group">
-          <button type="button" class="btn btn-backup" onclick="exportData()">Export Backup (.json)</button>
-          <label for="importFileInput" class="btn btn-restore">Import Backup File</label>
-          <input type="file" id="importFileInput" accept=".json" onchange="importData(event)">
-        </div>
+        <button type="button" class="btn btn-export" onclick="exportData()">Export Data 💾</button>
+        <label for="importFileInput" class="btn btn-import">Import Data 📁</label>
+        <input type="file" id="importFileInput" accept=".json" onchange="importData(event)">
       </div>
 
       <button class="btn-reset" onclick="resetProgress()">Clear Entire Database</button>
     </div>
   </div>
 
-  <!-- WORKOUT HISTORY LOG -->
   <div class="card">
     <h3 style="margin-top:0;">Workout History</h3>
     <div id="history-list"></div>
   </div>
 
-  <!-- HOW-TO MODAL POPUP -->
+  <!-- HOW-TO MODAL POPUP WITH YOUTUBE LINK -->
   <div class="modal-overlay" id="instruction-modal">
     <div class="modal-card">
       <h3 class="modal-title" id="modal-exercise-title">Exercise Title</h3>
       <div class="modal-body" id="modal-exercise-desc">Instructions go here...</div>
+      <a id="youtube-link-btn" class="btn-youtube" href="#" target="_blank" rel="noopener noreferrer">Watch Video Guide on YouTube 🎥</a>
       <button class="modal-close" onclick="closeModal()">Got It 👍</button>
     </div>
   </div>
@@ -413,130 +436,160 @@
     <div class="modal-card">
       <h3 class="modal-title" style="color: #34d399;">Rest & Heart Recovery 🫀</h3>
       <div class="timer-display" id="timer-countdown">01:30</div>
-      
       <div class="timer-prompt">
         🗣️ <strong>Talk Test Check:</strong> Ensure your breath has slowed and you can comfortably speak a full sentence before starting your next set.
       </div>
-
       <button class="modal-close" style="background:#3b82f6; margin-top:20px;" onclick="closeTimerModal()">Skip Rest Timer ⏩</button>
     </div>
   </div>
 
-  <!-- OSRS LEVEL UP POP-UP MODAL -->
+  <!-- LEVEL UP POP-UP MODAL -->
   <div class="modal-overlay" id="level-up-modal">
     <div class="modal-card level-up-card">
       <div class="level-up-icon" id="lvlup-icon">🎉</div>
-      <h2 class="level-up-title">Congratulations!</h2>
-      <div class="level-up-sub" id="lvlup-msg">Your PUSH level is now 1!</div>
-      <button class="modal-close btn-level-up" onclick="dismissLevelUpModal()">Continue ⚔️</button>
+      <h2 class="level-up-title">Attribute Level Up!</h2>
+      <div class="level-up-sub" id="lvlup-msg">Your CHEST level is now 1!</div>
+      <button class="modal-close btn-level-up" onclick="dismissLevelUpModal()">Continue 🚀</button>
     </div>
   </div>
 
   <script>
-    // VERSION CONTROL & STORAGE CONFIGURATION
-    const CURRENT_APP_VERSION = 1;
-
-    let skillsXP = JSON.parse(localStorage.getItem('user_skills_xp')) || { push: 0, pull: 0, legs: 0, core: 0, engine: 0 };
+    const APP_VERSION = 5;
+    let skillsXP = JSON.parse(localStorage.getItem('user_engym_xp')) || { chest: 0, back: 0, shoulders: 0, arms: 0, legs: 0, core: 0, engine: 0 };
     let workoutHistory = JSON.parse(localStorage.getItem('user_workout_history')) || [];
     let savedWeights = JSON.parse(localStorage.getItem('user_saved_weights')) || {};
     let overloadHistory = JSON.parse(localStorage.getItem('user_overload_tracker')) || {};
-    let activeDay = 1;
+    let activeCategory = "chest";
     let timerInterval = null;
     let levelUpQueue = [];
 
-    // AUTOMATED VERSION CHECK ON LAUNCH
-    window.addEventListener('DOMContentLoaded', () => {
-      const savedVersion = localStorage.getItem('gym_app_version');
-      if (!savedVersion || parseInt(savedVersion, 10) < CURRENT_APP_VERSION) {
-        console.log(`Migrating local storage to app version ${CURRENT_APP_VERSION}`);
-        localStorage.setItem('gym_app_version', CURRENT_APP_VERSION);
-      }
-    });
-
-    const skillIcons = {
-      push: "🏋️",
-      pull: "🚣",
-      legs: "🦵",
-      core: "🧘",
-      engine: "🫀"
-    };
+    const skillIcons = { chest: "🏋️", back: "🚣", shoulders: "🎯", arms: "💪", legs: "🦵", core: "🧘", engine: "🫀" };
 
     const instructions = {
-      "Treadmill": "Set to a comfortable brisk walking speed (3.0–3.5 mph) at a light incline (2–3%). Keep upright posture, engage core, and maintain steady breathing.",
-      "Elliptical": "Hold handlebars firmly, push through heels to activate quads/glutes, and pull with upper body in a smooth, steady rhythm.",
-      "Bike": "Adjust seat height so leg has a slight bend at bottom of stroke. Maintain steady cadence at moderate resistance without overexerting.",
-      "Seated Cable Row": "Sit with feet firmly planted, bend knees slightly, grab handle. Pull cable towards navel keeping chest tall, squeeze shoulder blades back. Exhale on pull.",
-      "Lat Pull Down": "Grip bar slightly wider than shoulders. Lean back slightly, pull bar down to upper chest while driving elbows down. Keep rhythm steady.",
-      "Dumbbell Row": "Place one knee and hand on bench. Keep back flat, pull dumbbell toward hip keeping elbow close to torso. Avoid holding your breath.",
-      "Seated Chest Press": "Adjust seat so handles align with mid-chest. Press outward smoothly without locking elbows, return slowly to chest level.",
-      "Incline DB Press": "Lie back on incline bench holding dumbbells at chest. Press upward until arms extend, maintaining head elevation above heart.",
-      "Seated DB Press": "Sit upright with back support. Press dumbbells from shoulder height smoothly overhead, exhaling as you press up.",
-      "Seated Rear Delt": "Sit facing machine with chest padded. With slight elbow bend, sweep handles outward until hands align with shoulders. Squeeze upper back.",
-      "Face Pulls": "Attach rope to high pulley. Pull rope toward forehead, flaring elbows out and pulling hands apart at end of movement.",
-      "Seated Cable Flyes": "Sit upright on bench. Bring cable handles together in front of chest with arms slightly bent, squeezing chest at center.",
-      "Seated Leg Press": "Place feet hip-width on sled. Unlock safety, lower weight until knees reach 90 degrees, push back up through heels smoothly without locking knees.",
-      "Goblet Squats": "Hold dumbbell vertically against chest. Squat down driving knees outward until thighs parallel floor, push up continuously breathing.",
-      "Step-Ups": "Step onto low bench/box with right foot, press through heel to stand fully up. Step down and repeat. Excellent steady cardio strain.",
+      "Treadmill": "Set to a comfortable brisk walking speed (3.0–3.5 mph) at a light incline. Keep upright posture and breathe steadily.",
+      "Elliptical": "Hold handlebars firmly, push through heels to activate quads/glutes, and pull with upper body in a smooth rhythm.",
+      "Bike": "Adjust seat height so leg has a slight bend. Maintain steady cadence at moderate resistance.",
+      "Seated Chest Press": "Adjust seat so handles align with mid-chest. Press outward smoothly without locking elbows, exhale on push.",
+      "Incline Seated Machine Press": "Set bench/seat so handles align with upper chest. Push upward smoothly without locking elbows.",
+      "Seated Cable Flyes": "Sit upright. Bring cable handles together in front of chest with arms slightly bent, squeezing chest controlled.",
+      "Pec Deck Machine Flyes": "Sit firmly with back flat. Bring arm pads together smoothly, pause 1 sec, return without straining.",
+      "Low-to-High Cable Flyes": "Set pulleys low. Raise hands upward toward mid-chest level smoothly without holding breath.",
+      "Seated Cable Row": "Sit with knees slightly bent. Pull cable towards navel keeping chest tall, squeeze shoulder blades back.",
+      "Wide-Grip Lat Pulldown": "Grip bar wider than shoulders. Pull bar down to upper chest while driving elbows down, keeping torso still.",
+      "Seated Chest-Supported Row": "Lean chest against pad. Pull handles back smoothly without over-arching lower back.",
+      "Neutral-Grip Lat Pulldown": "Use parallel handle. Pull bar down toward upper chest smoothly while exhaling.",
+      "Seated DB Lateral Raises": "Sit upright with dumbbells at sides. Raise arms out to sides until parallel to floor, lower slowly.",
+      "Cable Face Pulls": "Attach rope to high pulley. Pull rope toward forehead, flaring elbows out and pulling hands apart.",
+      "Seated Machine Shoulder Press": "Sit firmly against backrest. Press handles smoothly overhead without locking elbows at the top.",
+      "Reverse Pec Deck Flyes": "Sit facing machine with chest padded. Sweep handles outward to side until hands align with shoulders.",
+      "Seated Bicep Cable Curls": "Sit tall facing low cable pulley. Curl handles toward shoulders keeping elbows pinned at your sides.",
+      "Incline DB Bicep Curls": "Sit back on incline bench. Curl dumbbells upward toward shoulders smoothly without swinging.",
+      "Preacher Curl Machine": "Rest triceps firmly against pad. Curl handles upward smoothly, pause at top, lower under full control.",
+      "Seated Dumbbell Hammer Curls": "Sit upright holding dumbbells with thumbs pointing up. Curl weights upward keeping palms facing each other.",
+      "Standing Cable Rope Pushdown": "Attach rope to high pulley. Keep elbows locked at sides, push rope down and flare ends outward at bottom.",
+      "Seated Overhead Tricep Extension": "Sit supported. Lower weight behind head with elbows bent, extend arms fully overhead exhaling.",
+      "Seated Tricep Machine Press": "Sit back firmly, grip handles. Push handles down smoothly to extend triceps.",
+      "Seated Leg Press": "Place feet hip-width on sled. Lower weight until knees reach 90 degrees, push back up through heels without locking knees.",
       "Seated Leg Extension": "Align machine pivot with knee joint. Extend legs fully, pause 1 sec at top, lower slowly back down.",
-      "Bodyweight Squats": "Feet shoulder-width. Sit hips back and down like sitting in a chair, keep chest up, drive through heels to stand.",
       "Seated Leg Curl": "Pad sits just above ankles. Curl legs downward toward glutes smoothly, pause 1 sec, return under control.",
-      "Glute Bridge": "Lie on back with knees bent, feet flat. Drive hips up toward ceiling squeezing glutes at top, lower back down while breathing continuously.",
-      "Assisted Pull-ups": "Set weight stack to comfortable assistance. Place knees on pad, pull body upward smoothly until chin passes bar.",
-      "Preacher Curl Machine": "Rest triceps firmly against pad, hold handles. Curl handles upward toward shoulders, pause at top, lower slowly.",
-      "Dumbbell Curls": "Stand tall, palms facing forward. Curl dumbbells toward shoulders while keeping elbows stationary at sides.",
-      "Cable Curls": "Attach straight/EZ bar to low pulley. Stand tall and curl bar upward keeping elbows locked to ribcage.",
-      "Seated Tricep Extension": "Hold overhead handle or dumbbell behind head with elbows bent. Extend arms fully overhead, squeeze triceps.",
-      "Tricep Rope Pushdown": "Attach rope to high pulley. Keep elbows locked at sides, push rope down and flare ends outward at bottom.",
-      "Seated Tricep Dips": "Sit on dip machine, push handles down smoothly to extend arms. Exhale on push, return slowly.",
+      "Seated Calf Raises": "Place pad on lower thighs. Raise heels up as high as possible, pause 1 sec, lower smoothly.",
       "Seated Ab Core Machine": "Adjust seat height, grip handles. Flex abs to crunch torso forward and downward smoothly without breath holding.",
-      "Seated Cable Woodchoppers": "Set cable to shoulder height. Rotate torso diagonally using core, keeping head upright and breathing steadily.",
-      "Bird-Dogs": "On hands and knees, extend opposite arm and leg straight out. Keep spine neutral and core steady without straining.",
-      "Standing Calf Raises": "Stand tall near wall for balance. Raise up onto toes as high as possible, pause, lower back down.",
-      "Seated Calf Raise": "Place pad over lower thighs. Raise heels up by pushing through balls of feet, squeeze calves at top."
+      "Standing Cable Pallof Press": "Stand side-on to cable at chest height. Press handle straight out in front of chest without twisting torso.",
+      "Seated Cable Woodchoppers": "Set cable at shoulder height. Rotate torso diagonally using core, keeping head upright and breathing steadily."
     };
 
-    const routines = {
-      1: { name: "Day 1: Upper A", exercises: [
-        { id: "c1", name: "Treadmill", target: "30 Mins", type: "cardio", skill: "engine", muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], xp: 50, completed: false, completedSets: 0, totalSets: 1, alternatives: [{name: "Elliptical", target: "30 Mins"}, {name: "Bike", target: "30 Mins"}] },
-        { id: "e1", name: "Seated Cable Row", target: "3x10", type: "resistance", skill: "pull", muscles: ["lats","biceps_l","biceps_r","rear_delts_l","rear_delts_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Lat Pull Down", target: "3x10"}, {name: "Dumbbell Row", target: "3x10"}] },
-        { id: "e2", name: "Seated Chest Press", target: "3x10", type: "resistance", skill: "push", muscles: ["chest_l","chest_r","front_delts_l","front_delts_r","triceps_l","triceps_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Incline DB Press", target: "3x10"}, {name: "Seated Cable Flyes", target: "3x12"}] },
-        { id: "e3", name: "Seated Rear Delt", target: "3x10", type: "resistance", skill: "pull", muscles: ["rear_delts_l","rear_delts_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Face Pulls", target: "3x12"}, {name: "Seated DB Press", target: "3x10"}] }
-      ]},
-      2: { name: "Day 2: Lower A (Legs)", exercises: [
-        { id: "c2", name: "Treadmill", target: "30 Mins", type: "cardio", skill: "engine", muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], xp: 50, completed: false, completedSets: 0, totalSets: 1, alternatives: [{name: "Elliptical", target: "30 Mins"}, {name: "Bike", target: "30 Mins"}] },
-        { id: "e4", name: "Seated Leg Press", target: "3x10", type: "resistance", skill: "legs", muscles: ["quads_l","quads_r","glutes_l","glutes_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Goblet Squats", target: "3x10"}, {name: "Step-Ups", target: "3x10"}] },
-        { id: "e5", name: "Seated Leg Extension", target: "3x10", type: "resistance", skill: "legs", muscles: ["quads_l","quads_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Bodyweight Squats", target: "3x12"}, {name: "Step-Ups", target: "3x10"}] },
-        { id: "e6", name: "Seated Leg Curl", target: "3x10", type: "resistance", skill: "legs", muscles: ["hamstrings_l","hamstrings_r","calves_back_l","calves_back_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Glute Bridge", target: "3x12"}, {name: "Seated Calf Raise", target: "3x12"}] }
-      ]},
-      3: { name: "Day 3: Upper B", exercises: [
-        { id: "c3", name: "Treadmill", target: "30 Mins", type: "cardio", skill: "engine", muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], xp: 50, completed: false, completedSets: 0, totalSets: 1, alternatives: [{name: "Elliptical", target: "30 Mins"}, {name: "Bike", target: "30 Mins"}] },
-        { id: "e7", name: "Lat Pull Down", target: "3x10", type: "resistance", skill: "pull", muscles: ["lats","biceps_l","biceps_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Assisted Pull-ups", target: "3x8"}, {name: "Seated Cable Row", target: "3x10"}] },
-        { id: "e8", name: "Preacher Curl Machine", target: "3x12", type: "resistance", skill: "pull", muscles: ["biceps_l","biceps_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Dumbbell Curls", target: "3x12"}, {name: "Cable Curls", target: "3x12"}] },
-        { id: "e9", name: "Seated Tricep Extension", target: "3x12", type: "resistance", skill: "push", muscles: ["triceps_l","triceps_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Tricep Rope Pushdown", target: "3x12"}, {name: "Seated Tricep Dips", target: "3x10"}] }
-      ]},
-      4: { name: "Day 4: Lower B (Core)", exercises: [
-        { id: "c4", name: "Treadmill", target: "30 Mins", type: "cardio", skill: "engine", muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], xp: 50, completed: false, completedSets: 0, totalSets: 1, alternatives: [{name: "Elliptical", target: "30 Mins"}, {name: "Bike", target: "30 Mins"}] },
-        { id: "e10", name: "Seated Ab Core Machine", target: "3x12", type: "resistance", skill: "core", muscles: ["abs"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Bird-Dogs", target: "3x10"}, {name: "Seated Cable Woodchoppers", target: "3x10"}] },
-        { id: "e11", name: "Seated Cable Woodchoppers", target: "3x10", type: "resistance", skill: "core", muscles: ["abs","lower_back"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Bird-Dogs", target: "3x10"}, {name: "Seated Ab Core Machine", target: "3x12"}] },
-        { id: "e12", name: "Seated Calf Raise", target: "3x12", type: "resistance", skill: "legs", muscles: ["calves_back_l","calves_back_r","calves_front_l","calves_front_r"], xp: 100, completed: false, completedSets: 0, totalSets: 3, alternatives: [{name: "Standing Calf Raises", target: "3x12"}, {name: "Seated Leg Extension", target: "3x10"}] }
-      ]},
-      5: { name: "Day 5: Upper A", exercises: [] },
-      6: { name: "Day 6: Lower A (Legs)", exercises: [] },
-      7: { name: "Day 7: Upper B", exercises: [] },
-      8: { name: "Day 8: Lower B (Core)", exercises: [] }
+    /* MASTER EXERCISE POOL */
+    const masterExercisePool = {
+      chest: [
+        { name: "Seated Chest Press", target: "3x10", type: "resistance", skill: "chest", muscles: ["chest_l","chest_r","front_delts_l","front_delts_r"], xp: 100 },
+        { name: "Seated Cable Flyes", target: "3x12", type: "resistance", skill: "chest", muscles: ["chest_l","chest_r"], xp: 100 },
+        { name: "Pec Deck Machine Flyes", target: "3x12", type: "resistance", skill: "chest", muscles: ["chest_l","chest_r"], xp: 100 },
+        { name: "Incline Seated Machine Press", target: "3x10", type: "resistance", skill: "chest", muscles: ["chest_l","chest_r","front_delts_l"], xp: 100 },
+        { name: "Low-to-High Cable Flyes", target: "3x12", type: "resistance", skill: "chest", muscles: ["chest_l","chest_r"], xp: 100 }
+      ],
+      back: [
+        { name: "Seated Cable Row", target: "3x10", type: "resistance", skill: "back", muscles: ["lats","rear_delts_l","rear_delts_r"], xp: 100 },
+        { name: "Wide-Grip Lat Pulldown", target: "3x10", type: "resistance", skill: "back", muscles: ["lats","biceps_l","biceps_r"], xp: 100 },
+        { name: "Seated Chest-Supported Row", target: "3x10", type: "resistance", skill: "back", muscles: ["lats","lower_back"], xp: 100 },
+        { name: "Neutral-Grip Lat Pulldown", target: "3x10", type: "resistance", skill: "back", muscles: ["lats","biceps_l","biceps_r"], xp: 100 }
+      ],
+      shoulders: [
+        { name: "Seated DB Lateral Raises", target: "3x12", type: "resistance", skill: "shoulders", muscles: ["front_delts_l","front_delts_r"], xp: 100 },
+        { name: "Cable Face Pulls", target: "3x12", type: "resistance", skill: "shoulders", muscles: ["rear_delts_l","rear_delts_r"], xp: 100 },
+        { name: "Seated Machine Shoulder Press", target: "3x10", type: "resistance", skill: "shoulders", muscles: ["front_delts_l","front_delts_r","triceps_l"], xp: 100 },
+        { name: "Reverse Pec Deck Flyes", target: "3x12", type: "resistance", skill: "shoulders", muscles: ["rear_delts_l","rear_delts_r"], xp: 100 }
+      ],
+      arms: {
+        biceps: [
+          { name: "Seated Bicep Cable Curls", target: "3x12", type: "resistance", skill: "arms", muscles: ["biceps_l","biceps_r"], xp: 100, subType: "bicep" },
+          { name: "Incline DB Bicep Curls", target: "3x12", type: "resistance", skill: "arms", muscles: ["biceps_l","biceps_r"], xp: 100, subType: "bicep" },
+          { name: "Preacher Curl Machine", target: "3x12", type: "resistance", skill: "arms", muscles: ["biceps_l","biceps_r"], xp: 100, subType: "bicep" },
+          { name: "Seated Dumbbell Hammer Curls", target: "3x12", type: "resistance", skill: "arms", muscles: ["biceps_l","biceps_r"], xp: 100, subType: "bicep" }
+        ],
+        triceps: [
+          { name: "Standing Cable Rope Pushdown", target: "3x12", type: "resistance", skill: "arms", muscles: ["triceps_l","triceps_r"], xp: 100, subType: "tricep" },
+          { name: "Seated Overhead Tricep Extension", target: "3x12", type: "resistance", skill: "arms", muscles: ["triceps_l","triceps_r"], xp: 100, subType: "tricep" },
+          { name: "Seated Tricep Machine Press", target: "3x12", type: "resistance", skill: "arms", muscles: ["triceps_l","triceps_r"], xp: 100, subType: "tricep" }
+        ]
+      },
+      legs: [
+        { name: "Seated Leg Press", target: "3x10", type: "resistance", skill: "legs", muscles: ["quads_l","quads_r","glutes_l","glutes_r"], xp: 100 },
+        { name: "Seated Leg Extension", target: "3x10", type: "resistance", skill: "legs", muscles: ["quads_l","quads_r"], xp: 100 },
+        { name: "Seated Leg Curl", target: "3x10", type: "resistance", skill: "legs", muscles: ["hamstrings_l","hamstrings_r"], xp: 100 },
+        { name: "Seated Calf Raises", target: "3x12", type: "resistance", skill: "legs", muscles: ["calves_back_l","calves_back_r"], xp: 100 }
+      ],
+      core: [
+        { name: "Seated Ab Core Machine", target: "3x12", type: "resistance", skill: "core", muscles: ["abs"], xp: 100 },
+        { name: "Standing Cable Pallof Press", target: "3x10", type: "resistance", skill: "core", muscles: ["abs","lower_back"], xp: 100 },
+        { name: "Seated Cable Woodchoppers", target: "3x10", type: "resistance", skill: "core", muscles: ["abs","lower_back"], xp: 100 }
+      ]
     };
 
-    routines[5].exercises = JSON.parse(JSON.stringify(routines[1].exercises));
-    routines[6].exercises = JSON.parse(JSON.stringify(routines[2].exercises));
-    routines[7].exercises = JSON.parse(JSON.stringify(routines[3].exercises));
-    routines[8].exercises = JSON.parse(JSON.stringify(routines[4].exercises));
+    /* ACTIVE ROUTINES STATE */
+    let activeRoutines = {
+      chest: { name: "Chest Focused Routine", label: "🏋️ Chest", exercises: [] },
+      back: { name: "Back Focused Routine", label: "🚣 Back", exercises: [] },
+      shoulders: { name: "Shoulders Focused Routine", label: "🎯 Shoulders", exercises: [] },
+      arms: { name: "Arms Focused Routine", label: "💪 Arms", exercises: [] },
+      legs: { name: "Legs Focused Routine", label: "🦵 Legs", exercises: [] },
+      core: { name: "Core Focused Routine", label: "🧘 Core", exercises: [] }
+    };
+
+    function initRoutines() {
+      const cardioAnchor = { id: "cardio_anchor", name: "Treadmill", target: "30 Mins", type: "cardio", skill: "engine", muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], xp: 50, completed: false, completedSets: 0, totalSets: 1 };
+
+      Object.keys(activeRoutines).forEach(key => {
+        let selectedExs = [];
+        if (key === 'arms') {
+          const bicepChoice = masterExercisePool.arms.biceps[0];
+          const tricepChoice = masterExercisePool.arms.triceps[0];
+          const remainingArmPool = [
+            ...masterExercisePool.arms.biceps.slice(1),
+            ...masterExercisePool.arms.triceps.slice(1)
+          ];
+          const randomChoice = remainingArmPool[0];
+          selectedExs = [bicepChoice, tricepChoice, randomChoice];
+        } else {
+          selectedExs = masterExercisePool[key].slice(0, 3);
+        }
+
+        activeRoutines[key].exercises = [
+          JSON.parse(JSON.stringify(cardioAnchor)),
+          ...selectedExs.map((ex, i) => ({
+            ...JSON.parse(JSON.stringify(ex)),
+            id: `${key}_ex_${i}`,
+            completed: false,
+            completedSets: 0,
+            totalSets: parseSetsFromTarget(ex.target)
+          }))
+        ];
+      });
+    }
 
     function getLevelFromXP(xp) {
       if (xp < 50) return 0;
       let lvl = 1;
-      while (xp >= getXPForLevel(lvl + 1)) {
-        lvl++;
-      }
+      while (xp >= getXPForLevel(lvl + 1)) { lvl++; }
       return lvl;
     }
 
@@ -555,20 +608,15 @@
           const gain = ctx.createGain();
           osc.type = 'triangle';
           osc.frequency.value = freq;
-          
           const startTime = ctx.currentTime + (index * 0.08);
           gain.gain.setValueAtTime(0.3, startTime);
           gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.3);
-          
           osc.connect(gain);
           gain.connect(ctx.destination);
-          
           osc.start(startTime);
           osc.stop(startTime + 0.3);
         });
-      } catch (e) {
-        console.log("Audio Context blocked");
-      }
+      } catch (e) { console.log("Audio Context blocked"); }
     }
 
     function triggerLevelUp(skillKey, newLevel) {
@@ -589,47 +637,43 @@
       const nextEvent = levelUpQueue.shift();
       document.getElementById('lvlup-icon').innerText = skillIcons[nextEvent.skill] || "🎉";
       document.getElementById('lvlup-msg').innerHTML = `Your <strong>${nextEvent.skill.toUpperCase()}</strong> skill is now level <strong>${nextEvent.level}</strong>!`;
-      
       modal.style.display = 'flex';
       playLevelUpSound();
     }
 
     function dismissLevelUpModal() {
       document.getElementById('level-up-modal').style.display = 'none';
-      if (levelUpQueue.length > 0) {
-        setTimeout(processLevelUpQueue, 300);
-      }
+      if (levelUpQueue.length > 0) setTimeout(processLevelUpQueue, 300);
     }
 
     function renderDayTabs() {
       const container = document.getElementById('day-buttons');
       container.innerHTML = '';
-      for (let i = 1; i <= 8; i++) {
+      
+      Object.keys(activeRoutines).forEach(key => {
+        const cat = activeRoutines[key];
         const btn = document.createElement('button');
-        btn.className = `day-btn ${i === activeDay ? 'active' : ''}`;
-        btn.innerText = `Day ${i}`;
+        btn.className = `day-btn ${key === activeCategory ? 'active' : ''}`;
+        btn.innerText = cat.label;
         btn.onclick = () => {
-          activeDay = i;
+          activeCategory = key;
           renderDayTabs();
           renderWorkouts();
         };
         container.appendChild(btn);
-      }
+      });
     }
 
     function updateWeight(exerciseName, val) {
       const oldWeight = parseFloat(savedWeights[exerciseName]) || 0;
       const newWeight = parseFloat(val) || 0;
-
       savedWeights[exerciseName] = val;
       localStorage.setItem('user_saved_weights', JSON.stringify(savedWeights));
 
-      // Reset completion counter if weight increases
       if (newWeight > oldWeight) {
         overloadHistory[exerciseName] = 0;
         localStorage.setItem('user_overload_tracker', JSON.stringify(overloadHistory));
       }
-
       renderWorkouts();
     }
 
@@ -664,7 +708,7 @@
     }
 
     function renderWorkouts() {
-      const currentRoutine = routines[activeDay];
+      const currentRoutine = activeRoutines[activeCategory];
       document.getElementById('day-title').innerText = currentRoutine.name;
 
       const container = document.getElementById('workout-list');
@@ -679,7 +723,6 @@
         const isCardio = ex.type === 'cardio';
         ex.totalSets = parseSetsFromTarget(ex.target);
 
-        // 5-session completion counter check
         const completionsCount = overloadHistory[ex.name] || 0;
         const isReadyForIncrease = completionsCount >= 5;
 
@@ -713,7 +756,7 @@
             <button onclick="logSetCompletion(${index})" ${ex.completed ? 'disabled style="background:#334155; color:#64748b;"' : ''}>
               ${ex.completed ? 'Done ✓' : isCardio ? 'Complete' : 'Set Done ⏱️'}
             </button>
-            <button class="btn-swap" onclick="swapExercise(${index})" ${ex.completedSets > 0 || ex.completed ? 'style="display:none"' : ''}>
+            <button class="btn-swap" onclick="swapExerciseNoDuplicates(${index})" ${ex.completedSets > 0 || ex.completed || isCardio ? 'style="display:none"' : ''}>
               Swap 🔄
             </button>
           </div>
@@ -727,9 +770,14 @@
     }
 
     function showInstruction(exerciseName) {
-      const desc = instructions[exerciseName] || "Perform with controlled movement, focus on squeezing target muscle, and maintain proper steady breathing.";
+      const desc = instructions[exerciseName] || "Perform with controlled movement, focus on squeezing target muscle, maintain continuous steady breathing, and avoid straining.";
       document.getElementById('modal-exercise-title').innerText = exerciseName;
       document.getElementById('modal-exercise-desc').innerText = desc;
+      
+      const youtubeBtn = document.getElementById('youtube-link-btn');
+      const searchQuery = encodeURIComponent(`${exerciseName} exercise form tutorial`);
+      youtubeBtn.href = `https://www.youtube.com/results?search_query=${searchQuery}`;
+      
       document.getElementById('instruction-modal').style.display = 'flex';
     }
 
@@ -741,7 +789,6 @@
       let timeLeft = seconds;
       const display = document.getElementById('timer-countdown');
       document.getElementById('timer-modal').style.display = 'flex';
-
       clearInterval(timerInterval);
       
       const updateTimerDisplay = () => {
@@ -751,11 +798,9 @@
       };
 
       updateTimerDisplay();
-
       timerInterval = setInterval(() => {
         timeLeft--;
         updateTimerDisplay();
-
         if (timeLeft <= 0) {
           clearInterval(timerInterval);
           closeTimerModal();
@@ -769,7 +814,7 @@
     }
 
     function logSetCompletion(index) {
-      const ex = routines[activeDay].exercises[index];
+      const ex = activeRoutines[activeCategory].exercises[index];
       if (ex.completed) return;
 
       ex.completedSets = (ex.completedSets || 0) + 1;
@@ -777,20 +822,18 @@
       if (ex.completedSets >= ex.totalSets) {
         ex.completed = true;
         
-        const targetSkill = ex.skill || 'push';
+        const targetSkill = ex.skill || 'chest';
         const oldXP = skillsXP[targetSkill] || 0;
         const oldLvl = getLevelFromXP(oldXP);
 
         skillsXP[targetSkill] = oldXP + ex.xp;
-        localStorage.setItem('user_skills_xp', JSON.stringify(skillsXP));
+        localStorage.setItem('user_engym_xp', JSON.stringify(skillsXP));
 
         const newLvl = getLevelFromXP(skillsXP[targetSkill]);
-        
         if (newLvl > oldLvl) {
           triggerLevelUp(targetSkill, newLvl);
         }
 
-        // Increment completion counter only for resistance movements
         if (ex.type !== 'cardio') {
           overloadHistory[ex.name] = (overloadHistory[ex.name] || 0) + 1;
           localStorage.setItem('user_overload_tracker', JSON.stringify(overloadHistory));
@@ -798,30 +841,51 @@
       }
 
       renderWorkouts();
-
       if (ex.type !== 'cardio') {
         startRestTimer(90);
       }
     }
 
-    function swapExercise(index) {
-      const ex = routines[activeDay].exercises[index];
-      const currentName = ex.name;
-      const currentTarget = ex.target;
+    function swapExerciseNoDuplicates(index) {
+      const currentRoutine = activeRoutines[activeCategory];
+      const exToSwap = currentRoutine.exercises[index];
+      const activeNames = currentRoutine.exercises.map(e => e.name);
+
+      let availableOptions = [];
+
+      if (activeCategory === 'arms') {
+        if (exToSwap.subType === 'bicep') {
+          availableOptions = masterExercisePool.arms.biceps.filter(e => !activeNames.includes(e.name));
+        } else if (exToSwap.subType === 'tricep') {
+          availableOptions = masterExercisePool.arms.triceps.filter(e => !activeNames.includes(e.name));
+        } else {
+          const allArms = [...masterExercisePool.arms.biceps, ...masterExercisePool.arms.triceps];
+          availableOptions = allArms.filter(e => !activeNames.includes(e.name));
+        }
+      } else {
+        availableOptions = masterExercisePool[activeCategory].filter(e => !activeNames.includes(e.name));
+      }
+
+      if (availableOptions.length === 0) {
+        alert("All alternative exercises for this group are already currently on screen!");
+        return;
+      }
+
+      const newEx = availableOptions[Math.floor(Math.random() * availableOptions.length)];
       
-      const nextAlt = ex.alternatives.shift();
-      ex.alternatives.push({name: currentName, target: currentTarget});
-      
-      ex.name = nextAlt.name;
-      ex.target = nextAlt.target;
-      ex.completedSets = 0;
-      ex.completed = false;
+      currentRoutine.exercises[index] = {
+        ...JSON.parse(JSON.stringify(newEx)),
+        id: `${activeCategory}_ex_${index}_${Date.now()}`,
+        completed: false,
+        completedSets: 0,
+        totalSets: parseSetsFromTarget(newEx.target)
+      };
 
       renderWorkouts();
     }
 
     function logWorkoutSession() {
-      const currentExercises = routines[activeDay].exercises;
+      const currentExercises = activeRoutines[activeCategory].exercises;
       const completedList = currentExercises.filter(ex => ex.completed || ex.completedSets > 0);
       
       if (completedList.length === 0) {
@@ -838,7 +902,6 @@
 
       completedList.forEach(e => {
         allMusclesWorked.push(...e.muscles);
-
         if (e.type === 'cardio') {
           sessionCardioMins += 30;
         } else {
@@ -852,7 +915,7 @@
         id: Date.now(),
         timestamp: now.getTime(),
         date: dateString,
-        routine: routines[activeDay].name,
+        routine: activeRoutines[activeCategory].name,
         exercises: completedList.map(e => {
           const w = savedWeights[e.name];
           const setsDoneText = e.type === 'cardio' ? e.target : `${e.completedSets}/${e.totalSets} Sets`;
@@ -874,7 +937,6 @@
         ex.completed = false;
         ex.completedSets = 0;
       });
-      activeDay = activeDay < 8 ? activeDay + 1 : 1;
       
       renderDayTabs();
       renderWorkouts();
@@ -883,22 +945,18 @@
 
     function deleteHistoryEntry(id) {
       if (!confirm("Delete this log entry? XP & Analytics from this workout will be removed.")) return;
-
       const index = workoutHistory.findIndex(entry => entry.id === id);
       if (index !== -1) {
         workoutHistory.splice(index, 1);
         localStorage.setItem('user_workout_history', JSON.stringify(workoutHistory));
-
         renderWorkouts();
         renderHistory();
       }
     }
 
-    /* CARDIO & TONNAGE ANALYTICS CALCULATION */
     function calculateAnalytics() {
       let grandTotalCardio = 0;
       let grandTotalTonnage = 0;
-
       const now = Date.now();
       const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
       const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
@@ -922,14 +980,12 @@
           cardio7d += cMins;
           tonnage7d += tKg;
         }
-
         if (timeDiff <= thirtyDaysMs) {
           cardio30d += cMins;
           tonnage30d += tKg;
         }
       });
 
-      // Update Analytics UI Display
       document.getElementById('total-cardio-val').innerText = `${grandTotalCardio} mins`;
       document.getElementById('cardio-7d-avg').innerText = `${cardio7d} min/wk`;
       document.getElementById('cardio-30d-avg').innerText = `${Math.round(cardio30d / 4.2)} min/wk`;
@@ -939,22 +995,51 @@
       document.getElementById('tonnage-30d-avg').innerText = `${Math.round(tonnage30d / 4.2).toLocaleString()} kg/wk`;
     }
 
-    function refreshHeatmapFromHistory() {
-      document.querySelectorAll('.muscle').forEach(m => m.classList.remove('worked'));
+    /* DYNAMIC 5-STAGE HEATMAP LOGIC */
+    function calculateStage(hoursAgo) {
+      if (hoursAgo === null || hoursAgo === undefined || hoursAgo >= 96) return 1; // Stage 1: Cold / Rested
+      if (hoursAgo <= 24) return 5; // Stage 5: Just Worked (0-24h)
+      if (hoursAgo <= 48) return 4; // Stage 4: Worked Recently (24-48h)
+      if (hoursAgo <= 72) return 3; // Stage 3: Fading Fatigue (48-72h)
+      return 2;                    // Stage 2: Nearly Rested (72-96h)
+    }
 
+    function refreshHeatmapFromHistory() {
+      const now = Date.now();
+      const muscleLastWorked = {};
+
+      // Parse history to find the latest workout timestamp for each muscle group
       workoutHistory.forEach(entry => {
+        const entryTime = entry.timestamp || entry.id;
         if (entry.muscles) {
           entry.muscles.forEach(muscleId => {
-            const el = document.getElementById(muscleId);
-            if (el) el.classList.add('worked');
+            if (!muscleLastWorked[muscleId] || entryTime > muscleLastWorked[muscleId]) {
+              muscleLastWorked[muscleId] = entryTime;
+            }
           });
         }
+      });
+
+      // Apply dynamic stage level to SVG muscle groups
+      document.querySelectorAll('.muscle').forEach(element => {
+        const muscleId = element.id;
+        const lastTime = muscleLastWorked[muscleId];
+        let hoursAgo = null;
+
+        if (lastTime) {
+          hoursAgo = (now - lastTime) / (1000 * 60 * 60);
+        }
+
+        const stage = calculateStage(hoursAgo);
+        element.setAttribute('data-stage', stage);
+
+        const titleText = hoursAgo !== null ? `${muscleId.replace('_', ' ').toUpperCase()} (${Math.round(hoursAgo)}h ago)` : `${muscleId.replace('_', ' ').toUpperCase()} (Ready to train)`;
+        element.querySelector('title').innerText = titleText;
       });
     }
 
     function renderHistory() {
       const container = document.getElementById('history-list');
-      
       if (workoutHistory.length === 0) {
         container.innerHTML = `<p style="color:#64748b; font-size: 0.9rem;">No workouts logged yet.</p>`;
         return;
@@ -964,7 +1049,6 @@
       workoutHistory.forEach(entry => {
         const div = document.createElement('div');
         div.className = `history-item`;
-        
         let exerciseBullets = entry.exercises.map(item => `<li>${item}</li>`).join('');
         
         div.innerHTML = `
@@ -979,7 +1063,7 @@
     }
 
     function updateStatsUI() {
-      const skillKeys = ['push', 'pull', 'legs', 'core', 'engine'];
+      const skillKeys = ['chest', 'back', 'shoulders', 'arms', 'legs', 'core', 'engine'];
       let totalLvl = 0;
       let grandTotalXP = 0;
 
@@ -1026,22 +1110,20 @@
     function resetProgress() {
       if (confirm("Are you sure you want to delete ALL history and reset all Skill Levels to 0?")) {
         localStorage.clear();
-        skillsXP = { push: 0, pull: 0, legs: 0, core: 0, engine: 0 };
+        skillsXP = { chest: 0, back: 0, shoulders: 0, arms: 0, legs: 0, core: 0, engine: 0 };
         workoutHistory = [];
         savedWeights = {};
         overloadHistory = {};
+        initRoutines();
         renderDayTabs();
         renderWorkouts();
         renderHistory();
       }
     }
 
-    // ----------------------------------------------------
-    // EXPORT & IMPORT BACKUP SYSTEM
-    // ----------------------------------------------------
     function exportData() {
       const backupData = {
-        version: CURRENT_APP_VERSION,
+        version: APP_VERSION,
         timestamp: new Date().toISOString(),
         skillsXP: skillsXP,
         workoutHistory: workoutHistory,
@@ -1049,17 +1131,16 @@
         overloadHistory: overloadHistory
       };
 
-      const jsonString = JSON.stringify(backupData, null, 2);
-      const blob = new Blob([jsonString], { type: "application/json" });
+      const jsonStr = JSON.stringify(backupData, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
       const url = URL.createObjectURL(blob);
 
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.href = url;
-      downloadAnchor.download = `gym_rpg_backup_${new Date().toISOString().slice(0, 10)}.json`;
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-
-      document.body.removeChild(downloadAnchor);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `engym_backup_v${APP_VERSION}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
 
@@ -1068,44 +1149,37 @@
       if (!file) return;
 
       const reader = new FileReader();
-
       reader.onload = function(e) {
         try {
-          const importedPayload = JSON.parse(e.target.result);
+          const imported = JSON.parse(e.target.result);
+          if (imported.skillsXP && imported.workoutHistory && imported.savedWeights) {
+            skillsXP = imported.skillsXP;
+            workoutHistory = imported.workoutHistory;
+            savedWeights = imported.savedWeights;
+            overloadHistory = imported.overloadHistory || {};
 
-          if (importedPayload && (importedPayload.skillsXP || importedPayload.workoutHistory)) {
-            if (importedPayload.skillsXP) {
-              skillsXP = importedPayload.skillsXP;
-              localStorage.setItem('user_skills_xp', JSON.stringify(skillsXP));
-            }
-            if (importedPayload.workoutHistory) {
-              workoutHistory = importedPayload.workoutHistory;
-              localStorage.setItem('user_workout_history', JSON.stringify(workoutHistory));
-            }
-            if (importedPayload.savedWeights) {
-              savedWeights = importedPayload.savedWeights;
-              localStorage.setItem('user_saved_weights', JSON.stringify(savedWeights));
-            }
-            if (importedPayload.overloadHistory) {
-              overloadHistory = importedPayload.overloadHistory;
-              localStorage.setItem('user_overload_tracker', JSON.stringify(overloadHistory));
-            }
+            localStorage.setItem('user_engym_xp', JSON.stringify(skillsXP));
+            localStorage.setItem('user_workout_history', JSON.stringify(workoutHistory));
+            localStorage.setItem('user_saved_weights', JSON.stringify(savedWeights));
+            localStorage.setItem('user_overload_tracker', JSON.stringify(overloadHistory));
 
-            localStorage.setItem('gym_app_version', importedPayload.version || CURRENT_APP_VERSION);
-
-            alert("Backup imported successfully! Page will now reload.");
-            location.reload();
+            alert("EnGym data restored! Refreshing...");
+            initRoutines();
+            renderDayTabs();
+            renderWorkouts();
+            renderHistory();
           } else {
-            alert("Invalid file: Back up file does not contain recognized gym tracker data.");
+            alert("Error: Invalid backup file format.");
           }
         } catch (err) {
-          alert("Error reading backup file: " + err.message);
+          alert("Error loading file: " + err.message);
         }
       };
-
       reader.readAsText(file);
     }
 
+    // INITIALIZE APP
+    initRoutines();
     renderDayTabs();
     renderWorkouts();
     renderHistory();

@@ -37,7 +37,7 @@
     .analytics-box { background: #0f172a; border: 1px solid #334155; border-radius: 10px; padding: 14px; text-align: center; }
     .analytics-title { font-size: 0.85rem; color: #94a3b8; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
     .analytics-main-val { font-size: 1.8rem; font-weight: bold; margin: 6px 0; }
-    .analytics-sub { font-size: 0.75rem; color: #64748b; display: flex; justify-content: space-around; margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 6px; }
+    .analytics-sub { font-size: 0.75rem; color: #64748b; display: flex; justify-around: space-around; margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 6px; }
     .analytics-sub-item span { color: #f8fafc; font-weight: bold; }
 
     /* Layout */
@@ -51,7 +51,7 @@
     .day-btn.active { background: #3b82f6; color: #fff; border-color: #60a5fa; font-weight: bold; }
 
     /* DYNAMIC HEATMAP STYLING */
-    .heatmap-container { display: flex; justify-content: space-around; align-items: center; gap: 15px; padding: 10px 0; }
+    .heatmap-container { display: flex; justify-around: space-around; align-items: center; gap: 15px; padding: 10px 0; }
     .body-view { text-align: center; background: #0f172a; padding: 12px 16px; border-radius: 10px; border: 1px solid #334155; }
     .body-view h4 { margin: 0 0 10px 0; color: #64748b; font-size: 0.8rem; letter-spacing: 1.5px; }
     
@@ -128,25 +128,48 @@
     .osrs-total-num { font-size: 1.2rem; font-weight: bold; color: #fef08a; margin: 2px 0; }
     .osrs-total-rank { font-size: 0.65rem; color: #cbd5e1; background: #854d0e; padding: 1px 6px; border-radius: 4px; }
 
+    /* EXERCISE SLOT CARDS */
     .exercise-item { 
       position: relative; 
       display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
+      flex-direction: column;
+      gap: 10px;
       background: #0f172a; 
       padding: 14px; 
-      padding-top: 18px; 
       border-radius: 8px; 
-      margin-bottom: 10px; 
-      min-height: 80px; 
+      margin-bottom: 12px; 
       border: 1px solid #334155; 
       box-sizing: border-box; 
+      transition: border-color 0.2s, background-color 0.2s;
     }
-    .exercise-info { flex: 1; min-width: 0; padding-right: 15px; }
-    
-    .exercise-header { display: flex; align-items: center; margin-bottom: 8px; }
-    .exercise-header strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem; }
-    
+
+    .exercise-item.status-unstarted { border-left: 4px solid #475569; }
+    .exercise-item.status-started { border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.03); }
+    .exercise-item.status-completed { border-left: 4px solid #10b981; background: rgba(16, 185, 129, 0.05); }
+
+    .exercise-item-main {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .exercise-info { flex: 1; min-width: 0; padding-right: 10px; }
+    .exercise-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .exercise-header select { font-weight: bold; max-width: 220px; text-overflow: ellipsis; }
+
+    .status-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+    .status-badge.unstarted { background: #334155; color: #94a3b8; }
+    .status-badge.started { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+    .status-badge.completed { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; }
+
     .badge-xp-top-right { 
       position: absolute; 
       top: 8px; 
@@ -168,6 +191,7 @@
     .weight-container { display: flex; align-items: center; gap: 6px; }
     .weight-input-box { display: flex; align-items: center; gap: 4px; background: #1e293b; border: 1px solid #475569; padding: 2px 6px; border-radius: 4px; transition: all 0.3s; }
     .weight-input-box input { background: transparent; border: none; color: #f8fafc; width: 42px; text-align: center; font-weight: bold; font-size: 0.85rem; outline: none; }
+    .weight-input-box input:disabled { color: #64748b; }
     .weight-input-box span { color: #94a3b8; font-size: 0.75rem; }
 
     /* GLOWING WEIGHT INPUT FOR OVERLOAD READINESS */
@@ -185,17 +209,32 @@
     .last-weight-hint { font-size: 0.75rem; color: #64748b; }
     .overload-hint-badge { font-size: 0.75rem; color: #fbbf24; font-weight: bold; margin-left: 2px; }
 
-    .exercise-controls { display: flex; gap: 6px; flex-shrink: 0; align-items: center; margin-top: 10px; }
-    .cardio-item { border-left: 4px solid #f59e0b; }
+    .exercise-controls { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+    .cardio-item { border-left: 4px solid #f59e0b !important; }
     
-    button { background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s; }
+    .select-input, button {
+      font-family: inherit;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background-color: #0f172a;
+      color: #f8fafc;
+      outline: none;
+    }
+
+    button { background: #3b82f6; border: none; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: background 0.2s, transform 0.1s; }
     button:hover { background: #2563eb; }
+    button:active { transform: scale(0.98); }
+
     .btn-info { background: #0284c7; padding: 8px 10px; }
     .btn-info:hover { background: #0369a1; }
-    .btn-swap { background: #d97706; }
-    .btn-swap:hover { background: #b45309; }
+    .btn-add-slot { background: #334155; color: #f8fafc; border: 1px dashed #60a5fa; width: 100%; margin-bottom: 12px; padding: 8px; }
+    .btn-add-slot:hover { background: #475569; }
     .btn-finish { background: #16a34a; width: 100%; margin-top: 10px; padding: 10px; font-size: 1rem; }
     .btn-finish:hover { background: #15803d; }
+    .btn-delete-slot { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid #ef4444; padding: 6px 8px; font-size: 0.75rem; }
+    .btn-delete-slot:hover { background: #ef4444; color: white; }
     .btn-delete-entry { background: #ef4444; padding: 4px 8px; font-size: 0.75rem; float: right; border-radius: 4px; }
     .btn-delete-entry:hover { background: #dc2626; }
     .btn-reset { background: #475569; margin-top: 15px; width: 100%; padding: 8px; font-size: 0.8rem; }
@@ -404,6 +443,8 @@
 
       <h3 style="margin-top:0;" id="day-title">Chest Focused Routine</h3>
       <div id="workout-list"></div>
+
+      <button class="btn-add-slot" onclick="addExerciseSlot()">+ Add Exercise Slot</button>
       <button class="btn-finish" onclick="logWorkoutSession()">Log Session to History 📝</button>
       
       <div class="backup-panel">
@@ -556,7 +597,19 @@
     };
 
     function initRoutines() {
-      const cardioAnchor = { id: "cardio_anchor", name: "Treadmill", target: "30 Mins", type: "cardio", skill: "engine", muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], xp: 50, completed: false, completedSets: 0, totalSets: 1 };
+      const cardioAnchor = { 
+        id: "cardio_anchor", 
+        name: "Treadmill", 
+        target: "30 Mins", 
+        type: "cardio", 
+        skill: "engine", 
+        muscles: ["quads_l","quads_r","calves_front_l","calves_front_r"], 
+        xp: 50, 
+        completed: false, 
+        completedSets: 0, 
+        totalSets: 1,
+        status: 'unstarted'
+      };
 
       Object.keys(activeRoutines).forEach(key => {
         let selectedExs = [];
@@ -577,10 +630,11 @@
           JSON.parse(JSON.stringify(cardioAnchor)),
           ...selectedExs.map((ex, i) => ({
             ...JSON.parse(JSON.stringify(ex)),
-            id: `${key}_ex_${i}`,
+            id: `${key}_ex_${i}_${Date.now()}`,
             completed: false,
             completedSets: 0,
-            totalSets: parseSetsFromTarget(ex.target)
+            totalSets: parseSetsFromTarget(ex.target),
+            status: 'unstarted'
           }))
         ];
       });
@@ -646,6 +700,31 @@
       if (levelUpQueue.length > 0) setTimeout(processLevelUpQueue, 300);
     }
 
+    function switchCategory(newCategory) {
+      if (activeCategory !== newCategory) {
+        const currentExs = activeRoutines[activeCategory].exercises;
+        const targetExs = activeRoutines[newCategory].exercises;
+
+        // Preserve any started or completed exercise in its slot across focus group switches
+        currentExs.forEach((ex, i) => {
+          const isStartedOrCompleted = ex.status === 'started' || ex.status === 'completed' || ex.completedSets > 0 || ex.completed;
+          if (isStartedOrCompleted) {
+            if (i < targetExs.length) {
+              if (!(targetExs[i].completedSets > 0 || targetExs[i].completed)) {
+                targetExs[i] = JSON.parse(JSON.stringify(ex));
+              }
+            } else {
+              targetExs.push(JSON.parse(JSON.stringify(ex)));
+            }
+          }
+        });
+
+        activeCategory = newCategory;
+      }
+      renderDayTabs();
+      renderWorkouts();
+    }
+
     function renderDayTabs() {
       const container = document.getElementById('day-buttons');
       container.innerHTML = '';
@@ -656,12 +735,71 @@
         btn.className = `day-btn ${key === activeCategory ? 'active' : ''}`;
         btn.innerText = cat.label;
         btn.onclick = () => {
-          activeCategory = key;
-          renderDayTabs();
-          renderWorkouts();
+          switchCategory(key);
         };
         container.appendChild(btn);
       });
+    }
+
+    function changeSlotExercise(index, newName) {
+      const currentRoutine = activeRoutines[activeCategory];
+      let pool = [];
+      if (activeCategory === 'arms') {
+        pool = [...masterExercisePool.arms.biceps, ...masterExercisePool.arms.triceps];
+      } else {
+        pool = masterExercisePool[activeCategory] || [];
+      }
+      const selected = pool.find(e => e.name === newName);
+      if (!selected) return;
+
+      const ex = currentRoutine.exercises[index];
+      currentRoutine.exercises[index] = {
+        ...JSON.parse(JSON.stringify(selected)),
+        id: ex.id,
+        status: ex.status || 'unstarted',
+        completed: ex.completed || false,
+        completedSets: ex.completedSets || 0,
+        totalSets: parseSetsFromTarget(selected.target)
+      };
+      renderWorkouts();
+    }
+
+    function addExerciseSlot() {
+      const currentRoutine = activeRoutines[activeCategory];
+      let pool = [];
+
+      if (activeCategory === 'arms') {
+        pool = [...masterExercisePool.arms.biceps, ...masterExercisePool.arms.triceps];
+      } else {
+        pool = masterExercisePool[activeCategory] || masterExercisePool.chest;
+      }
+
+      const activeNames = currentRoutine.exercises.map(e => e.name);
+      const availableOptions = pool.filter(p => !activeNames.includes(p.name));
+      const selected = availableOptions.length > 0 
+        ? availableOptions[Math.floor(Math.random() * availableOptions.length)] 
+        : pool[Math.floor(Math.random() * pool.length)];
+
+      currentRoutine.exercises.push({
+        ...JSON.parse(JSON.stringify(selected)),
+        id: `${activeCategory}_ex_${currentRoutine.exercises.length}_${Date.now()}`,
+        status: 'unstarted',
+        completed: false,
+        completedSets: 0,
+        totalSets: parseSetsFromTarget(selected.target)
+      });
+
+      renderWorkouts();
+    }
+
+    function removeExerciseSlot(index) {
+      const currentRoutine = activeRoutines[activeCategory];
+      if (currentRoutine.exercises.length <= 1) {
+        alert("Routine must retain at least one exercise slot.");
+        return;
+      }
+      currentRoutine.exercises.splice(index, 1);
+      renderWorkouts();
     }
 
     function updateWeight(exerciseName, val) {
@@ -714,9 +852,27 @@
       const container = document.getElementById('workout-list');
       container.innerHTML = '';
 
+      let currentPool = [];
+      if (activeCategory === 'arms') {
+        currentPool = [...masterExercisePool.arms.biceps, ...masterExercisePool.arms.triceps];
+      } else {
+        currentPool = masterExercisePool[activeCategory] || [];
+      }
+
       currentRoutine.exercises.forEach((ex, index) => {
         const div = document.createElement('div');
-        div.className = `exercise-item ${ex.type === 'cardio' ? 'cardio-item' : ''}`;
+        
+        // Derive slot status
+        if (ex.completed || ex.completedSets >= ex.totalSets) {
+          ex.status = 'completed';
+        } else if (ex.completedSets > 0) {
+          ex.status = 'started';
+        } else {
+          ex.status = 'unstarted';
+        }
+
+        const statusClass = `status-${ex.status}`;
+        div.className = `exercise-item ${statusClass} ${ex.type === 'cardio' ? 'cardio-item' : ''}`;
         
         const currentWeight = savedWeights[ex.name] || '';
         const lastWeight = getLastLoggedWeight(ex.name);
@@ -726,39 +882,49 @@
         const completionsCount = overloadHistory[ex.name] || 0;
         const isReadyForIncrease = completionsCount >= 5;
 
+        // Build dropdown options for resistance exercises
+        const optionsHTML = currentPool.map(opt => `
+          <option value="${opt.name.replace(/"/g, '&quot;')}" ${opt.name === ex.name ? 'selected' : ''}>
+            ${opt.name}
+          </option>
+        `).join('');
+
         div.innerHTML = `
           <span class="badge-xp-top-right">+${ex.xp} XP</span>
 
-          <div class="exercise-info">
-            <div class="exercise-header">
-              <strong title="${ex.name}">${ex.name}</strong>
-            </div>
+          <div class="exercise-item-main">
+            <div class="exercise-info">
+              <div class="exercise-header">
+                ${isCardio 
+                  ? `<strong title="${ex.name}">${ex.name}</strong>` 
+                  : `<select class="select-input" onchange="changeSlotExercise(${index}, this.value)" ${ex.completedSets > 0 || ex.completed ? 'disabled' : ''}>${optionsHTML}</select>`}
+                <span class="status-badge ${ex.status}">${ex.status}</span>
+              </div>
 
-            <div class="exercise-meta">
-              <span class="badge-rep">${ex.target}</span>
-              ${!isCardio ? `<span class="badge-sets">Set ${ex.completedSets}/${ex.totalSets}</span>` : ''}
-              
-              ${!isCardio ? `
-                <div class="weight-container">
-                  <div class="weight-input-box ${isReadyForIncrease ? 'ready-glow' : ''}">
-                    <input type="number" step="0.5" placeholder="0" value="${currentWeight}" onchange="updateWeight('${ex.name.replace(/'/g, "\\'")}', this.value)" />
-                    <span>kg</span>
+              <div class="exercise-meta">
+                <span class="badge-rep">${ex.target}</span>
+                ${!isCardio ? `<span class="badge-sets">Set ${ex.completedSets}/${ex.totalSets}</span>` : ''}
+                
+                ${!isCardio ? `
+                  <div class="weight-container">
+                    <div class="weight-input-box ${isReadyForIncrease ? 'ready-glow' : ''}">
+                      <input type="number" step="0.5" placeholder="0" value="${currentWeight}" ${ex.status === 'completed' ? 'disabled' : ''} onchange="updateWeight('${ex.name.replace(/'/g, "\\'")}', this.value)" />
+                      <span>kg</span>
+                    </div>
+                    ${lastWeight ? `<span class="last-weight-hint">Last: ${lastWeight}</span>` : ''}
+                    ${isReadyForIncrease ? `<span class="overload-hint-badge">✨ Ready for +weight!</span>` : `<span class="last-weight-hint">(${completionsCount}/5)</span>`}
                   </div>
-                  ${lastWeight ? `<span class="last-weight-hint">Last: ${lastWeight}</span>` : ''}
-                  ${isReadyForIncrease ? `<span class="overload-hint-badge">✨ Ready for +weight!</span>` : `<span class="last-weight-hint">(${completionsCount}/5)</span>`}
-                </div>
-              ` : ''}
+                ` : ''}
+              </div>
             </div>
-          </div>
-          
-          <div class="exercise-controls">
-            <button class="btn-info" onclick="showInstruction('${ex.name.replace(/'/g, "\\'")}')">ℹ️</button>
-            <button onclick="logSetCompletion(${index})" ${ex.completed ? 'disabled style="background:#334155; color:#64748b;"' : ''}>
-              ${ex.completed ? 'Done ✓' : isCardio ? 'Complete' : 'Set Done ⏱️'}
-            </button>
-            <button class="btn-swap" onclick="swapExerciseNoDuplicates(${index})" ${ex.completedSets > 0 || ex.completed || isCardio ? 'style="display:none"' : ''}>
-              Swap 🔄
-            </button>
+            
+            <div class="exercise-controls">
+              <button class="btn-info" onclick="showInstruction('${ex.name.replace(/'/g, "\\'")}')">ℹ️</button>
+              <button onclick="logSetCompletion(${index})" ${ex.completed ? 'disabled style="background:#334155; color:#64748b;"' : ''}>
+                ${ex.completed ? 'Done ✓' : isCardio ? 'Complete' : 'Set Done ⏱️'}
+              </button>
+              ${!isCardio ? `<button class="btn-delete-slot" onclick="removeExerciseSlot(${index})">🗑️</button>` : ''}
+            </div>
           </div>
         `;
         container.appendChild(div);
@@ -818,9 +984,11 @@
       if (ex.completed) return;
 
       ex.completedSets = (ex.completedSets || 0) + 1;
+      ex.status = 'started';
 
       if (ex.completedSets >= ex.totalSets) {
         ex.completed = true;
+        ex.status = 'completed';
         
         const targetSkill = ex.skill || 'chest';
         const oldXP = skillsXP[targetSkill] || 0;
@@ -844,44 +1012,6 @@
       if (ex.type !== 'cardio') {
         startRestTimer(90);
       }
-    }
-
-    function swapExerciseNoDuplicates(index) {
-      const currentRoutine = activeRoutines[activeCategory];
-      const exToSwap = currentRoutine.exercises[index];
-      const activeNames = currentRoutine.exercises.map(e => e.name);
-
-      let availableOptions = [];
-
-      if (activeCategory === 'arms') {
-        if (exToSwap.subType === 'bicep') {
-          availableOptions = masterExercisePool.arms.biceps.filter(e => !activeNames.includes(e.name));
-        } else if (exToSwap.subType === 'tricep') {
-          availableOptions = masterExercisePool.arms.triceps.filter(e => !activeNames.includes(e.name));
-        } else {
-          const allArms = [...masterExercisePool.arms.biceps, ...masterExercisePool.arms.triceps];
-          availableOptions = allArms.filter(e => !activeNames.includes(e.name));
-        }
-      } else {
-        availableOptions = masterExercisePool[activeCategory].filter(e => !activeNames.includes(e.name));
-      }
-
-      if (availableOptions.length === 0) {
-        alert("All alternative exercises for this group are already currently on screen!");
-        return;
-      }
-
-      const newEx = availableOptions[Math.floor(Math.random() * availableOptions.length)];
-      
-      currentRoutine.exercises[index] = {
-        ...JSON.parse(JSON.stringify(newEx)),
-        id: `${activeCategory}_ex_${index}_${Date.now()}`,
-        completed: false,
-        completedSets: 0,
-        totalSets: parseSetsFromTarget(newEx.target)
-      };
-
-      renderWorkouts();
     }
 
     function logWorkoutSession() {
@@ -933,11 +1063,7 @@
       workoutHistory.unshift(sessionEntry);
       localStorage.setItem('user_workout_history', JSON.stringify(workoutHistory));
 
-      currentExercises.forEach(ex => {
-        ex.completed = false;
-        ex.completedSets = 0;
-      });
-      
+      initRoutines();
       renderDayTabs();
       renderWorkouts();
       renderHistory();
